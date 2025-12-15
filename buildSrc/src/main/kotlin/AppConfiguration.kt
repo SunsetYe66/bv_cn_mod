@@ -1,7 +1,7 @@
 import java.io.File
 
 object AppConfiguration {
-    const val appId = "cn.dev.aaa1115910.bv"
+    const val appId = "dev.aaa1115910.bv"
     const val compileSdk = 36
     const val minSdk = 23
     const val targetSdk = 36
