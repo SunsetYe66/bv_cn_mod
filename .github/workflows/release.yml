@@ -52,6 +52,7 @@ jobs:
         run: |
           echo ${{ secrets.SIGN_KEY }} > ./encoded_key
           base64 --decode encoded_key > key.jks
+          openssl pkcs12 -in key.jks -nokeys -nocerts -info -passin pass:"${{ secrets.SIGN_SECRET }}"
 
       - name: Build apk
         run: ./gradlew assembleDefaultRelease assembleDefaultDebug
