@@ -5,18 +5,20 @@ on:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
       - 'v[0-9]+.[0-9]+.[0-9]+.[0-9]+'
+    branches:
+      - release_patch
 
 jobs:
   build-release:
     name: Build Release Apk
-    runs-on: macos-latest
-    if: github.repository == 'aaa1115910/bv'
+    runs-on: ubuntu-latest
+    if: github.repository == 'SunsetYe66/bv_cn_mod'
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: master
+          #ref: master
           fetch-depth: 0
           submodules: 'true'
 
@@ -25,6 +27,12 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+ 
+      - name: Monkey Patches
+        run: |
+          sed -i 's/isMainlandChina = NetworkUtil\.isMainlandChina()/isMainlandChina = false/' app/mobile/src/main/kotlin/dev/aaa1115910/bv/mobile/activities/MainActivity.kt
+          sed -i 's/isMainlandChina = NetworkUtil\.isMainlandChina()/isMainlandChina = false/' app/tv/src/main/kotlin/dev/aaa1115910/bv/tv/activities/MainActivity.kt
+          sed -i 's/private const val hotFix = [0-9]*/private const val hotFix = 1/' buildSrc/src/main/kotlin/AppConfiguration.kt
 
       - name: Write google-services.json
         env:
@@ -39,12 +47,13 @@ jobs:
           SIGNING_PROPERTIES: ${{ secrets.SIGNING_PROPERTIES }}
         run: |
           echo ${{ secrets.SIGNING_PROPERTIES }} > encoded_signing_properties
-          base64 -Dd -i encoded_signing_properties > signing.properties
+          base64 --decode encoded_signing_properties > signing.properties
 
       - name: Add jks file
         run: |
           echo ${{ secrets.SIGN_KEY }} > ./encoded_key
-          base64 -Dd -i encoded_key > key.jks
+          base64 --decode encoded_key > key.jks
+          openssl pkcs12 -in key.jks -nokeys -nocerts -info -passin pass:"${{ secrets.SIGN_SECRET }}"
 
       - name: Build apk
         run: ./gradlew assembleDefaultRelease assembleDefaultDebug
